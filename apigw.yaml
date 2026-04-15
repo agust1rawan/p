@@ -3,7 +3,7 @@ Resources:
     Type: 'AWS::ApiGateway::RestApi'
     Properties:
       Description: A test API
-      Name: techno-api-orders
+      Name: techno-api
   
   orders:
     Type: 'AWS::ApiGateway::Resource'
