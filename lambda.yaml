@@ -1,0 +1,210 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters: 
+  sglambda:
+    Type: AWS::EC2::SecurityGroup::Id
+  subnetprivate1:
+    Type: AWS::EC2::Subnet::Id
+  subnetprivate2:
+    Type: AWS::EC2::Subnet::Id
+Resources:
+  ordermanagement:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: techno-lambda-order-management
+      Handler: lambda_function.lambda_handler
+      Role: arn:aws:iam::349376966976:role/LabRole
+      Code:
+        S3Bucket: techno-logs-agusirawan-26
+        S3Key: lambda/order_management.zip
+      Runtime: python3.11
+      Timeout: 30
+      MemorySize: 512
+      Environment: 
+        Variables:
+          SECRET_ARN: arn:aws:secretsmanager:us-east-1:349376966976:secret:techno-secrets-rds-credentials-aNINtj
+          STEP_FUNCTIONS_ARN: "arn:aws:states:us-east-1:349376966976:stateMachine:techno-stepfunctions-order-workflow"
+      Layers:
+        - !Ref layer
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref sglambda
+        SubnetIds:
+          - !Ref subnetprivate1
+          - !Ref subnetprivate2
+  processpayment:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: techno-lambda-process-payment
+      Handler: lambda_function.lambda_handler
+      Role: arn:aws:iam::349376966976:role/LabRole
+      Code:
+        S3Bucket: techno-logs-agusirawan-26
+        S3Key: lambda/process_payment.zip
+      Runtime: python3.11
+      Timeout: 30
+      MemorySize: 512
+      Environment: 
+        Variables:
+          SECRET_ARN: arn:aws:secretsmanager:us-east-1:349376966976:secret:techno-secrets-rds-credentials-aNINtj
+          IDEMPOTENCY_TABLE: ""
+      Layers:
+        - !Ref layer
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref sglambda
+        SubnetIds:
+          - !Ref subnetprivate1
+          - !Ref subnetprivate2
+  updateinventory:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: techno-lambda-update-inventory
+      Handler: lambda_function.lambda_handler
+      Role: arn:aws:iam::349376966976:role/LabRole
+      Code:
+        S3Bucket: techno-logs-agusirawan-26
+        S3Key: lambda/update_inventory.zip
+      Runtime: python3.11
+      Timeout: 45
+      MemorySize: 256
+      Environment: 
+        Variables:
+          SECRET_ARN: arn:aws:secretsmanager:us-east-1:349376966976:secret:techno-secrets-rds-credentials-aNINtj
+          LOW_STOCK_THRESHOLD: 5
+      Layers:
+        - !Ref layer
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref sglambda
+        SubnetIds:
+          - !Ref subnetprivate1
+          - !Ref subnetprivate2
+  sendnotification:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: techno-lambda-send-notification
+      Handler: lambda_function.lambda_handler
+      Role: arn:aws:iam::349376966976:role/LabRole
+      Code:
+        S3Bucket: techno-logs-agusirawan-26
+        S3Key: lambda/send_notification.zip
+      Runtime: python3.11
+      Timeout: 60
+      MemorySize: 256
+      Environment: 
+        Variables:
+          SNS_TOPIC_ARN: "arn:aws:sns:us-east-1:349376966976:techno-sns-order-notification"
+      Layers:
+        - !Ref layer
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref sglambda
+        SubnetIds:
+          - !Ref subnetprivate1
+          - !Ref subnetprivate2
+  generatereport:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: techno-lambda-generate-report
+      Handler: lambda_function.lambda_handler
+      Role: arn:aws:iam::349376966976:role/LabRole
+      Code:
+        S3Bucket: techno-logs-agusirawan-26
+        S3Key: lambda/generate_report.zip
+      Runtime: python3.11
+      Timeout: 120
+      MemorySize: 1024
+      Environment: 
+        Variables:
+          SECRET_ARN: arn:aws:secretsmanager:us-east-1:349376966976:secret:techno-secrets-rds-credentials-aNINtj
+          SNS_TOPIC_ARN: "arn:aws:sns:us-east-1:349376966976:techno-sns-order-notification"
+          S3_LOGS_BUCKET: techno-logs-agusirawan-26
+      Layers:
+        - !Ref layer
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref sglambda
+        SubnetIds:
+          - !Ref subnetprivate1
+          - !Ref subnetprivate2
+  initdb:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: techno-lambda-init-db
+      Handler: lambda_function.lambda_handler
+      Role: arn:aws:iam::349376966976:role/LabRole
+      Code:
+        S3Bucket: techno-logs-agusirawan-26 
+        S3Key: lambda/init_db.zip
+      Runtime: python3.11
+      Timeout: 300
+      MemorySize: 512
+      Environment: 
+        Variables:
+          SECRET_ARN: arn:aws:secretsmanager:us-east-1:349376966976:secret:techno-secrets-rds-credentials-aNINtj
+      Layers:
+        - !Ref layer
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref sglambda
+        SubnetIds:
+          - !Ref subnetprivate1
+          - !Ref subnetprivate2
+  healthcheck:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: techno-lambda-health-check
+      Handler: lambda_function.lambda_handler
+      Role: arn:aws:iam::349376966976:role/LabRole
+      Code:
+        S3Bucket: techno-logs-agusirawan-26
+        S3Key: lambda/health_check.zip
+      Runtime: python3.11
+      Timeout: 10
+      MemorySize: 128
+      Environment: 
+        Variables:
+          SECRET_ARN: arn:aws:secretsmanager:us-east-1:349376966976:secret:techno-secrets-rds-credentials-aNINtj
+          STEP_FUNCTIONS_ARN: "arn:aws:states:us-east-1:349376966976:stateMachine:techno-stepfunctions-order-workflow"
+      Layers:
+        - !Ref layer
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref sglambda
+        SubnetIds:
+          - !Ref subnetprivate1
+          - !Ref subnetprivate2
+
+  alias:
+    Type: AWS::Lambda::Alias
+    Properties:
+      FunctionName: !Ref function
+      FunctionVersion: !GetAtt version.Version
+      Name: BLUE
+  layer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      CompatibleRuntimes:
+        - python3.12
+        - python3.11
+      Content:
+        S3Bucket: techno-logs-agusirawan-26
+        S3Key: lambda/layer2.zip
+      Description: layer lambda
+      LayerName: techno-layer-dependencies
+      LicenseInfo: MIT
+
+  ordermanagementpermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ordermanagement.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+  healthpermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt healthcheck.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'

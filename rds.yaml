@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  subnetprivate1:
+    Type: AWS::EC2::Subnet::Id
+  subnetprivate2:
+    Type: AWS::EC2::Subnet::Id
+  sgrds:
+    Type: AWS::EC2::SecurityGroup::Id
+Resources: 
+  myDBSubnetGroup: 
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: Description of subnet group
+      SubnetIds: 
+        - !Ref subnetprivate1
+        - !Ref subnetprivate2
+      Tags: 
+        - Key: Name
+          Value: techno-db-subnetgroup
+
+  RDSDBInstance:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      AllocatedStorage: '20'
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      EngineVersion: '15.17'
+      DBName: ordersdb
+      DBSubnetGroupName: !Ref myDBSubnetGroup
+      MasterUsername: dbadmin
+      MasterUserPassword: TechnoCloud2026!
+      StorageType: gp3
+      VPCSecurityGroups: 
+        - !Ref sgrds

@@ -1,0 +1,233 @@
+Resources:
+  technoapi:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Description: A test API
+      Name: techno-api-orders
+  
+  orders:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref technoapi
+      ParentId: !GetAtt 
+        - technoapi
+        - RootResourceId
+      PathPart: orders
+  ordersid:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref technoapi
+      ParentId: !Ref orders
+      PathPart: '{id}'
+  status:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref technoapi
+      ParentId: !GetAtt 
+        - technoapi
+        - RootResourceId
+      PathPart: status
+  statusid:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref technoapi
+      ParentId: !Ref status
+      PathPart: '{id}'
+  customers:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref technoapi
+      ParentId: !GetAtt 
+        - technoapi
+        - RootResourceId
+      PathPart: customers
+  products:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref technoapi
+      ParentId: !GetAtt 
+        - technoapi
+        - RootResourceId
+      PathPart: products
+  health:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref technoapi
+      ParentId: !GetAtt 
+        - technoapi
+        - RootResourceId
+      PathPart: health
+
+
+  orderGET:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      ApiKeyRequired: true
+      RestApiId: !Ref technoapi
+      ResourceId: !Ref orders
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:349376966976:function:techno-lambda-order-management/invocations
+  orderPOST:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      ApiKeyRequired: true
+      RestApiId: !Ref technoapi
+      ResourceId: !Ref orders
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:349376966976:function:techno-lambda-order-management/invocations
+  orderidGET:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      ApiKeyRequired: true
+      RestApiId: !Ref technoapi
+      ResourceId: !Ref ordersid
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:349376966976:function:techno-lambda-order-management/invocations
+  orderidPUT:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      ApiKeyRequired: true
+      RestApiId: !Ref technoapi
+      ResourceId: !Ref ordersid
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:349376966976:function:techno-lambda-order-management/invocations
+  orderidDELETE:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      ApiKeyRequired: true
+      RestApiId: !Ref technoapi
+      ResourceId: !Ref ordersid
+      HttpMethod: DELETE
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:349376966976:function:techno-lambda-order-management/invocations
+  statusidGET:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      ApiKeyRequired: true
+      RestApiId: !Ref technoapi
+      ResourceId: !Ref statusid
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:349376966976:function:techno-lambda-order-management/invocations
+  customersGET:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      ApiKeyRequired: true
+      RestApiId: !Ref technoapi
+      ResourceId: !Ref customers
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:349376966976:function:techno-lambda-order-management/invocations
+  productsGET:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      ApiKeyRequired: true
+      RestApiId: !Ref technoapi
+      ResourceId: !Ref products
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:349376966976:function:techno-lambda-order-management/invocations
+  healthGET:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      ApiKeyRequired: false
+      RestApiId: !Ref technoapi
+      ResourceId: !Ref health
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:349376966976:function:techno-lambda-health-check/invocations
+
+  Deployment:
+    DependsOn:
+      - orderGET
+      - orderPOST
+      - orderidGET
+      - orderidDELETE
+      - orderidPUT
+      - statusidGET
+      - customersGET
+      - productsGET
+      - healthGET
+    Type: 'AWS::ApiGateway::Deployment'
+    Properties:
+      RestApiId: !Ref technoapi
+      Description: Deployment
+      StageName: production
+
+  ApiKey:
+    Type: 'AWS::ApiGateway::ApiKey'
+    DependsOn:
+      - Deployment
+    Properties:
+      Name: techno-api-key
+      Description: techno API Key V1
+      Enabled: true
+      StageKeys:
+        - RestApiId: !Ref technoapi
+          StageName: production
+
+  usagePlan:
+    DependsOn:
+      - Deployment
+    Type: 'AWS::ApiGateway::UsagePlan'
+    Properties:
+      ApiStages:
+        - ApiId: !Ref technoapi
+          Stage: production
+      Description: Customer techno's usage plan
+      Quota:
+        Limit: 100000
+        Period: MONTH
+      Throttle:
+        BurstLimit: 2000
+        RateLimit: 1000
+      UsagePlanName: techno-usage-plan
+
+  usagePlanKey:
+    DependsOn:
+      - Deployment
+    Type: 'AWS::ApiGateway::UsagePlanKey'
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref usagePlan

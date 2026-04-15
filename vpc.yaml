@@ -1,0 +1,285 @@
+Resources:
+  myVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 35.10.0.0/18
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      Tags:
+       - Key: Name
+         Value: techno-vpc-serverless
+  ipv6CidrBlock:
+    Type: AWS::EC2::VPCCidrBlock
+    Properties:
+      VpcId: !Ref myVPC
+      AmazonProvidedIpv6CidrBlock: true
+
+  subnetpublic1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref myVPC
+      CidrBlock: 35.10.0.0/25
+      AvailabilityZone: "us-east-1a"
+      MapPublicIpOnLaunch: true
+      Ipv6Native: false
+      Ipv6CidrBlock: !Select [ 0, !Cidr [ !Select [ 0, !GetAtt myVPC.Ipv6CidrBlocks], 1, 64 ]]
+      AssignIpv6AddressOnCreation: true
+      Tags:
+       - Key: Name
+         Value: techno-subnet-public-1
+  subnetpublic2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref myVPC
+      CidrBlock: 35.10.1.0/25
+      AvailabilityZone: "us-east-1b"
+      MapPublicIpOnLaunch: true
+      Ipv6Native: false
+      Ipv6CidrBlock: !Select [ 1, !Cidr [ !Select [ 0, !GetAtt myVPC.Ipv6CidrBlocks], 2, 64 ]]
+      AssignIpv6AddressOnCreation: true
+      Tags:
+       - Key: Name
+         Value: techno-subnet-public-2
+  subnetprivate1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref myVPC
+      CidrBlock: 35.10.11.0/25
+      AvailabilityZone: "us-east-1a"
+      MapPublicIpOnLaunch: false
+      Ipv6Native: false
+      Ipv6CidrBlock: !Select [ 2, !Cidr [ !Select [ 0, !GetAtt myVPC.Ipv6CidrBlocks], 3, 64 ]]
+      AssignIpv6AddressOnCreation: true
+      Tags:
+       - Key: Name
+         Value: techno-subnet-private-1
+  subnetprivate2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref myVPC
+      CidrBlock: 35.10.12.0/25
+      AvailabilityZone: "us-east-1b"
+      MapPublicIpOnLaunch: false
+      Ipv6Native: false
+      Ipv6CidrBlock: !Select [ 3, !Cidr [ !Select [ 0, !GetAtt myVPC.Ipv6CidrBlocks], 4, 64 ]]
+      AssignIpv6AddressOnCreation: true
+      Tags:
+       - Key: Name
+         Value: techno-subnet-private-2
+
+  publicrt:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:  
+        Ref: myVPC
+      Tags:
+      - Key: Name
+        Value: techno-public-rt
+  
+  privatert:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:  
+        Ref: myVPC
+      Tags:
+      - Key: Name
+        Value: techno-private-rt
+
+  public1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: subnetpublic1
+      RouteTableId:
+        Ref: publicrt  
+  public2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: subnetpublic2
+      RouteTableId:
+        Ref: publicrt  
+  private1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: subnetprivate1
+      RouteTableId:
+        Ref: privatert
+  private2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: subnetprivate2
+      RouteTableId:
+        Ref: privatert
+
+  igw:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: techno-igw
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: myVPC
+      InternetGatewayId:
+        Ref: igw
+  
+  publicrouteipv4:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+       RouteTableId:
+         Ref: publicrt
+       DestinationCidrBlock: 0.0.0.0/0
+       GatewayId:
+         Ref: igw
+  publicrouteipv6:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+       RouteTableId:
+         Ref: publicrt
+       DestinationIpv6CidrBlock: ::/0
+       GatewayId:
+         Ref: igw
+
+  egressonlyigw: 
+    Type: AWS::EC2::EgressOnlyInternetGateway
+    Properties: 
+      VpcId: !Ref myVPC
+      Tags:
+      - Key: Name
+        Value: techno-egress-igw
+  
+  privaterouteipv6:
+    Type: AWS::EC2::Route
+    DependsOn: egressonlyigw
+    Properties:
+       RouteTableId:
+         Ref: privatert
+       DestinationIpv6CidrBlock: ::/0
+       EgressOnlyInternetGatewayId: 
+         Ref: egressonlyigw
+  
+  sglambda:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: techno-sg-lambda
+      GroupDescription: sg for lambda
+      VpcId: !Ref myVPC
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: 0
+          ToPort: 0
+          CidrIp: 0.0.0.0/0
+  sgrds:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: techno-sg-rds
+      GroupDescription: sg for rds
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref sglambda
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: 0
+          ToPort: 0
+          CidrIp: 0.0.0.0/0
+  sgvpcendpoint:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: techno-sg-vpc-endpoint
+      GroupDescription: sg for vpc endpoint
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 35.10.0.0/18
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: 0
+          ToPort: 0
+          CidrIp: 0.0.0.0/0
+
+  S3GatewayEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: 'Gateway'
+      VpcId: !Ref myVPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      RouteTableIds:
+        - !Ref privatert
+      Tags:
+      - Key: Name
+        Value: techno-s3-endpoints
+  eventBridgeEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: 'Interface'
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.events'
+      VpcId: !Ref myVPC
+      PrivateDnsEnabled: true
+      SubnetIds: 
+        - !Ref subnetprivate1
+        - !Ref subnetprivate2
+      SecurityGroupIds:
+        - !Ref sgvpcendpoint
+      Tags:
+      - Key: Name
+        Value: techno-eventbridge-endpoints
+  
+  stepsendpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: 'Interface'
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.states'
+      VpcId: !Ref myVPC
+      PrivateDnsEnabled: true
+      SubnetIds: 
+        - !Ref subnetprivate1
+        - !Ref subnetprivate2
+      SecurityGroupIds:
+        - !Ref sgvpcendpoint
+      Tags:
+      - Key: Name
+        Value: techno-steps-endpoints
+  
+  snsendpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: 'Interface'
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.sns'
+      VpcId: !Ref myVPC
+      PrivateDnsEnabled: true
+      SubnetIds: 
+        - !Ref subnetprivate1
+        - !Ref subnetprivate2
+      SecurityGroupIds:
+        - !Ref sgvpcendpoint
+      Tags:
+      - Key: Name
+        Value: techno-sns-endpoints
+  secretsmanagerendpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: 'Interface'
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.secretsmanager'
+      VpcId: !Ref myVPC
+      PrivateDnsEnabled: true
+      SubnetIds: 
+        - !Ref subnetprivate1
+        - !Ref subnetprivate2
+      SecurityGroupIds:
+        - !Ref sgvpcendpoint
+      Tags:
+      - Key: Name
+        Value: techno-secretsmanager-endpoints

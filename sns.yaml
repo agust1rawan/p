@@ -1,0 +1,16 @@
+Resources:
+  MySNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: handi@seamolec.org
+          Protocol: "email"
+        - Endpoint: agusirawanponorogo2026@gmail.com
+          Protocol: "email"
+      TopicName: "techno-sns-order-notification"
+
+Outputs:
+  TopicArn:
+    Description: The ARN of the created SNS topic
+    Value: !Ref MySNSTopic
+         

@@ -1,0 +1,13 @@
+version: 0.0
+Resources:
+  - techno-lambda-order-management:
+      Type: AWS::Lambda::Function
+      Properties:
+        Name: techno-lambda-order-management
+        Alias: live
+        CurrentVersion: !GetAtt techno-lambda-order-management.Version
+        TargetVersion: !GetAtt techno-lambda-order-management.Version
+# Hooks sengaja tidak digunakan karena health-check Lambda
+# memerlukan akses VPC (RDS) yang menyebabkan timeout saat
+# dipanggil sebagai CodeDeploy lifecycle hook.
+# Traffic shifting tetap berjalan via Canary10Percent5Minutes.

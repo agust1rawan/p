@@ -1,0 +1,31 @@
+Resources:
+  ordersBucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: techno-orders-agusirawan-26
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: Intelligent-Tiering
+            Status: Enabled
+            ExpirationInDays: 365
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: INTELLIGENT_TIERING 
+              - TransitionInDays: 120
+                StorageClass: GLACIER 
+  logsBucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: techno-logs-agusirawan-26
+      LifecycleConfiguration:
+        Rules:
+          - Id: Intelligent-Tiering
+            Status: Enabled
+            ExpirationInDays: 120
+            Transitions:
+              - TransitionInDays: 14
+                StorageClass: INTELLIGENT_TIERING 
